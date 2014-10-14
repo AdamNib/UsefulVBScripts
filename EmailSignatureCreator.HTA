@@ -93,7 +93,7 @@ Changes - AJN 13/10 - added ability to save multiple sigs
 		divPrev = divPrev & txtEmail.value & """>" & txtEmail.value & "</a> <font color=#97A8D6> | </font><a style=""color:#000000;text-decoration:none;"" href=""http://"
 		divPrev = divPrev & webAddress & """>" & webAddress & "</a></td></tr>"
 		divPrev = divPrev & "<tr><td><a style=""color:#000000;text-decoration:none;"" href=""http://" & webAddress & """>" & txtAddress.value & "</a></td></tr>"
-		divPrev = divPrev & "<tr><td style=""padding-top:10px;""><img src=""http://www.uppingham.co.uk/Mainfolder/style_template/Wordmark_email_footer.png"" </td></tr>"
+		divPrev = divPrev & "<tr><td style=""padding-top:10px;""><img src=""<URL....>k_email_footer.pngemail_footer.png"" </td></tr>"
 		
 		'apply the preview to the DIV
 		DivPreview.innerHTML = divPrev
@@ -109,7 +109,7 @@ Changes - AJN 13/10 - added ability to save multiple sigs
 		or len(txtExt.Value) < 5 _
 		or txtName.Value = "Enter Your Name" _
 		or txtTitle.Value = "Enter Your Title" _
-		or txtEmail.Value = "@uppingham.co.uk" then 
+		or txtEmail.Value = "" then 
 			msgbox("Sorry, You have not entered something in one of the boxes. Please Fill in Your Name, Title, Email Address, telephone number or address ")
 			Exit Sub
 		end if
@@ -161,7 +161,7 @@ Changes - AJN 13/10 - added ability to save multiple sigs
 		webcontents = webcontents & txtEmail.value & """>" & txtEmail.value & "</a> <font color=#97A8D6> | </font><a style=""color:#000000;text-decoration:none;"" href=""http://"
 		webcontents = webcontents & webAddress & """>" & webAddress & "</a></td></tr>"
 		webcontents = webcontents & "<tr><td><a style=""color:#000000;text-decoration:none;"" href=""http://" & webAddress & """>" & txtAddress.value & "</a></td></tr>"
-		webcontents = webcontents & "<tr><td style=""padding-top:10px;""><img src=""http://www.uppingham.co.uk/Mainfolder/style_template/Wordmark_email_footer.png"" </td></tr>"
+		webcontents = webcontents & "<tr><td style=""padding-top:10px;""><img src=""<URL....>k_email_footer.png"" </td></tr>"
 '		
 		'create the contents of the plain text signature file
 		txtContents = txtName.Value & " | " & txtTitle.Value 
@@ -229,11 +229,11 @@ Changes - AJN 13/10 - added ability to save multiple sigs
 		</tr>
 		<tr>
 			<td>Enter your Email Address <span style="color:red">*</span></td><td></td>
-			<td><input type="text" name="txtEmail" size="25" value="@uppingham.co.uk" onFocus="clearText('email')" onchange="changePreview"></td>
+			<td><input type="text" name="txtEmail" size="25" value="" onFocus="clearText('email')" onchange="changePreview"></td>
 		</tr>
 		<tr>
 			<td>Enter your Telephone Number</td><td></td>
-			<td><input type="text" name="txtExt" size="25" value="01572 822216" onchange="changePreview"></td>
+			<td><input type="text" name="txtExt" size="25" value=" onchange="changePreview"></td>
 		</tr>
 		<tr>
 			<td>Enter your Mobile Number (OPTIONAL!!)</td><td></td>
@@ -241,11 +241,11 @@ Changes - AJN 13/10 - added ability to save multiple sigs
 		</tr>
 		<tr>
 			<td>Enter your Address</td><td></td>
-			<td><input type="text" name="txtAddress" size="60" value="Uppingham School, Uppingham, Rutland, LE15 9QE" onchange="changePreview"></td>
+			<td><input type="text" name="txtAddress" size="60" value="" onchange="changePreview"></td>
 		</tr>
 		<tr>
 			<td>Enter name of signature file (for multiple signatures)</td><td></td>
-			<td><input type="text" name="txtfilename" size="60" value="UppinghamSignature" onchange="changePreview"></td>
+			<td><input type="text" name="txtfilename" size="60" value="" onchange="changePreview"></td>
 		</tr>
 	</table>
 	<br><b>Preview</b>
