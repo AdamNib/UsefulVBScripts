@@ -31,7 +31,7 @@ Set objTrans   =   CreateObject("NameTranslate")
 
 'Variables used Throughout
 
-strServer = "uppingham.co.uk" 'OK are we connected to the network
+strServer = "" 'OK are we connected to the network
 strVLogDir = "C:\TESTING123\"
 StrLoginFailure = ""
 strDomain = objNetwork.UserDomain
