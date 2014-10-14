@@ -1,0 +1,254 @@
+<!--
+*********************************************
+****** Outlook Signature File Creator *******
+*********************************************
+| Created By: Chuck Mindrup			|
+| Modified for Uppingham by : AJN		|
+| Purpose: Allow users to create their own	|
+|			signature
+| Thanks: M$ Scripting Guys			|
+| Use: Save the code in a file named		|
+|		OutlookSig.hta or anything else	|
+|		with a .hta on the end :)	|
+| Test:						|
+|	- Windows XP Pro			|
+|	- Windows Server 2003 Terminal Server	|
+|	- Windows 7 x32 and x64			|
+|	- Non Admin Domain Account		|
+|	- Running from network Share		|
+|	- Outlook 2003, 2007, 2010		|
+*********************************************
+Changes - AJN 13/10 - added ability to save multiple sigs
+-->
+
+<html>
+<head>
+<title>Uppingham School Email Signature Creator</title>
+
+<HTA:APPLICATION 
+     ID="objOutlookSigCreator"
+     APPLICATIONNAME="OutlookSigCreator"
+     SCROLL="no"
+     SINGLEINSTANCE="yes"
+>
+</head>
+
+<SCRIPT Language="VBScript">
+	<!--Public Variables-->
+	Dim homeAddress, homePhone, tollFreeNum, cellBlock, faxBlock
+	Dim extBlock, imageLoc, webAddress, companyName, mobBlock, mobBlocktxt
+	webAddress="www.uppingham.co.uk"
+	
+	<!--Scripts go here-->
+	Sub Window_Onload
+		'set the window size and default the location to #1
+		window.resizeTo 800,600
+		
+		'set the preview DIV with current values
+		changePreview
+	End Sub
+	
+	Function clearText(callBox)
+		'if the user is clicking on a text box with instrutions in it for 
+		' the first time, clear out the instructions
+		select case callBox
+			case "name"
+				if txtName.Value = "Enter Your Name" then txtName.Value = ""
+			case "title"
+				if txtTitle.Value = "Enter Your Title" then txtTitle.Value = ""
+			case "email"
+				if txtEmail.Value = "Enter Your Email Address" then txtEmail.Value = ""
+		end select
+	End Function
+		
+	Sub MassagePhoneNums
+		
+			extBlock = txtExt.value
+			mobBlock = txtMob.value
+			If mobBlock = "" then
+				mobBlock = ""
+				mobBlocktxt = ""
+			Else
+				mobBlocktxt = mobBlock & " | "
+				mobBlock = "<font color=#97A8D6> |</font> " & mobBlock
+				
+			End IF
+		
+	End Sub
+	
+	Sub changePreview
+		'Update the Preview DIV with current information
+		MassagePhoneNums 'clean up any numbers/extensions that have been entered
+		'set standard company address and phone numbers based on location choice
+		
+		
+		'create the DIV preview
+		divPrev = "<html><head></head><body><TABLE style=""font-family: 'Gill Sans MT', Arial, Helvetica, sans-serif; font-size:12;width:650px;margin:0px;"" cellspacing='0' cellpadding='0'>"
+		divPrev = divPrev & "<tr><td><b>"
+		divPrev = divPrev & txtName.Value 
+		divPrev = divPrev & " </b><font color=#97A8D6>| </font>"
+		divPrev = divPrev & txtTitle.Value
+		divPrev = divPrev & "</td></tr><tr><td><a style=""color:#000000;text-decoration:none;"" href=""tel:"
+		divPrev = divPrev & extBlock & """>" & extBlock & mobBlock &"</a><font color=#97A8D6> | </font><a style=""color:#000000;text-decoration:none;"" href=""mailto:"
+		divPrev = divPrev & txtEmail.value & """>" & txtEmail.value & "</a> <font color=#97A8D6> | </font><a style=""color:#000000;text-decoration:none;"" href=""http://"
+		divPrev = divPrev & webAddress & """>" & webAddress & "</a></td></tr>"
+		divPrev = divPrev & "<tr><td><a style=""color:#000000;text-decoration:none;"" href=""http://" & webAddress & """>" & txtAddress.value & "</a></td></tr>"
+		divPrev = divPrev & "<tr><td style=""padding-top:10px;""><img src=""http://www.uppingham.co.uk/Mainfolder/style_template/Wordmark_email_footer.png"" </td></tr>"
+		
+		'apply the preview to the DIV
+		DivPreview.innerHTML = divPrev
+	End Sub
+	
+	Sub createFiles
+		'create the files in the default Outlook(2003, 2007) signature file location
+		'If there is no name, title, or Email, warn the user then stop the file creation process
+		if len(txtName.Value) < 1 _
+		or len(txtTitle.Value) < 1 _
+		or len(txtEmail.Value) < 1 _
+		or len(txtAddress.Value) < 1 _
+		or len(txtExt.Value) < 5 _
+		or txtName.Value = "Enter Your Name" _
+		or txtTitle.Value = "Enter Your Title" _
+		or txtEmail.Value = "@uppingham.co.uk" then 
+			msgbox("Sorry, You have not entered something in one of the boxes. Please Fill in Your Name, Title, Email Address, telephone number or address ")
+			Exit Sub
+		end if
+
+		Const APPLICATION_DATA = &H1a&
+		Const ForAppending = 8
+		
+		Set objShell = CreateObject("Shell.Application")
+		Set objFolder = objShell.Namespace(APPLICATION_DATA) 'connect C:\Documents and Settings\User\Application Data\ folder for the current user
+		Set objFolderItem = objFolder.Self
+		strRootDirectory = objFolderItem.path & "\Microsoft\Signatures\" 'grab the directory where signatures reside
+		strNewDirectory = strRootDirectory & "CompanySignature_files" 'set a value for a folder for the image
+		strWebFile = txtfilename.value & ".htm"	'set a value for the HTML signature file
+		strTxtFile = txtfilename.value & ".txt" 'set a value for the Plain text signature file
+		
+		Set objFSO = CreateObject("Scripting.FileSystemObject")
+		'discover the version of Outlook based on file structure
+		if objFSO.FileExists("C:\Program Files\Microsoft Office\OFFICE11\Outlook.exe") then
+			outVer = 2003
+		else
+			if objFSO.FileExists("C:\Program Files\Microsoft Office\OFFICE12\Outlook.exe") then 
+				outVer = 2007
+			else
+				if objFSO.FileExists("C:\Program Files\Microsoft Office\OFFICE14\Outlook.exe") then outVer = 2010
+			end if
+		end if
+		
+		'if the user has never made a signature, the 'Signatures' folder will not exist so create it
+		if not objFSO.FolderExists(strRootDirectory) then Set objFolder = objFSO.CreateFolder(strRootDirectory)
+
+		'make sure the user wants to make a new signature if we find one already there
+		if objFSO.FileExists(strRootDirectory & strWebFile) then answer = msgbox("Signature already exists. OverWrite(original will be lost)?", vbYesNo)
+		if answer = vbNo then exit sub 'if the user does not want to detroy their existing signature, stop creating the new one
+
+		'create the files
+		Set objFile = objFSO.CreateTextFile(strRootDirectory & strWebFile)
+		set objFile = Nothing
+		Set objFile = objFSO.CreateTextFile(strRootDirectory & strTxtFile)
+		set objFile = Nothing
+		
+		'create the contents of the HTML Signature file.
+		webcontents = "<html><head></head><body><TABLE style=""color:#000000;font-family: 'Gill Sans MT', Arial, Helvetica, sans-serif; font-size:12;width:650px;margin:0px;"" cellspacing='0' cellpadding='0'>"
+		webcontents = webcontents & "<tr><td><b>"
+		webcontents = webcontents & txtName.Value 
+		webcontents = webcontents & " </b><font color=#97A8D6>| </font>"
+		webcontents = webcontents & txtTitle.Value
+		webcontents = webcontents & "</td></tr><tr><td><a style=""color:#000000;text-decoration:none;"" href=""tel:"
+		webcontents = webcontents & extBlock & """>" & extBlock & mobBlock & "</a><font color=#97A8D6> | </font><a style=""color:#000000;text-decoration:none;"" href=""mailto:"
+		webcontents = webcontents & txtEmail.value & """>" & txtEmail.value & "</a> <font color=#97A8D6> | </font><a style=""color:#000000;text-decoration:none;"" href=""http://"
+		webcontents = webcontents & webAddress & """>" & webAddress & "</a></td></tr>"
+		webcontents = webcontents & "<tr><td><a style=""color:#000000;text-decoration:none;"" href=""http://" & webAddress & """>" & txtAddress.value & "</a></td></tr>"
+		webcontents = webcontents & "<tr><td style=""padding-top:10px;""><img src=""http://www.uppingham.co.uk/Mainfolder/style_template/Wordmark_email_footer.png"" </td></tr>"
+'		
+		'create the contents of the plain text signature file
+		txtContents = txtName.Value & " | " & txtTitle.Value 
+		txtContents = txtContents & vbCrLf & extBlock & " | " & mobBlocktxt & txtEmail.value & " | " & webAddress _
+		& vbCrLf & txtAddress.value
+		
+		
+		
+		'write the contents to the files
+		Set objFile = objFSO.OpenTextFile(strRootDirectory & strWebFile, ForAppending, True)
+		objFile.WriteLine(webContents)
+		objFile.Close
+		SET objFile = NOTHING
+		Set objFile = objFSO.OpenTextFile(strRootDirectory & strTxtFile, ForAppending, True)
+		objFile.WriteLine(txtContents)
+		objFile.Close
+		SET objFile = NOTHING
+		SET objFSO = NOTHING
+		
+		'tell the user we are finished and what they need to do to use their new signature (the instructions
+		' are slightly different for 2007, so we tell them based on the version discovered earlier)
+		select case outVer
+			case 2003
+				successMsg = "Finished Creating Files!" _
+				& vbCrLf & vbCrLf & "***HOW TO USE YOUR NEW SIGNATURE***" _
+				& vbCrLf & "Please open Outlook 2003 and navigate to: " _
+				& vbCrLf & "Tools > Options > Mail Format Tab" _
+				& vbCrLf & "Set the New messages and Replies/forwards boxes to UppinghamSignature" _
+				& vbCrLf & vbCrLf & "And that does it!  Enjoy!"
+			case 2007
+				successMsg = "Finished Creating Files!" _
+				& vbCrLf & vbCrLf & "***HOW TO USE YOUR NEW SIGNATURE***" _
+				& vbCrLf & "Please open Outlook 2007 and navigate to: " _
+				& vbCrLf & "Tools > Options > Mail Format Tab > Signatures... Button" _
+				& vbCrLf & "Set the New messages and Replies/forwards boxes to UppinghamSignature" _
+				& vbCrLf & vbCrLf & "And that does it!  Enjoy!"
+			case 2010
+				successMsg = "Finished Creating Files!" _
+				& vbCrLf & vbCrLf & "***HOW TO USE YOUR NEW SIGNATURE***" _
+				& vbCrLf & "Please open Outlook 2010 and navigate to: " _
+				& vbCrLf & "File > Options > Mail > Signatures... Button" _
+				& vbCrLf & "Set the New messages and Replies/forwards boxes to UppinghamSignature" _
+				& vbCrLf & vbCrLf & "And that does it!  Enjoy!"
+			case default
+				successMsg = "Finished Creating Files!" _
+				& vbCrLf & vbCrLf & "***HOW TO USE YOUR NEW SIGNATURE***" _
+				& vbCrLf & "Please open your Outlook client and navigate to signatures in the settings." _
+				& vbCrLf & "Set the New messages and Replies/forwards boxes to UppinghamSignature" _
+				& vbCrLf & vbCrLf & "And that does it!  Enjoy!"
+		end select
+		msgbox(successMsg)
+	End Sub
+	
+</SCRIPT>
+<body>
+	<!--Web objects go here-->
+	<table>
+		<tr>
+			<td>Enter your Name <span style="color:red">*</span></td><td></td>
+			<td><input type="text" name="txtName" size="25" value="Enter Your Name" onFocus="clearText('name')" onChange="changePreview"></td>
+		</tr>
+		<tr>
+			<td>Enter your Title <span style="color:red">*</span></td><td></td>
+			<td><input type="text" name="txtTitle" size="40" value="Enter Your Title" onFocus="clearText('title')" onchange="changePreview"></td>
+		</tr>
+		<tr>
+			<td>Enter your Email Address <span style="color:red">*</span></td><td></td>
+			<td><input type="text" name="txtEmail" size="25" value="@uppingham.co.uk" onFocus="clearText('email')" onchange="changePreview"></td>
+		</tr>
+		<tr>
+			<td>Enter your Telephone Number</td><td></td>
+			<td><input type="text" name="txtExt" size="25" value="01572 822216" onchange="changePreview"></td>
+		</tr>
+		<tr>
+			<td>Enter your Mobile Number (OPTIONAL!!)</td><td></td>
+			<td><input type="text" name="txtMob" size="25" value="" onchange="changePreview"></td>
+		</tr>
+		<tr>
+			<td>Enter your Address</td><td></td>
+			<td><input type="text" name="txtAddress" size="60" value="Uppingham School, Uppingham, Rutland, LE15 9QE" onchange="changePreview"></td>
+		</tr>
+		<tr>
+			<td>Enter name of signature file (for multiple signatures)</td><td></td>
+			<td><input type="text" name="txtfilename" size="60" value="UppinghamSignature" onchange="changePreview"></td>
+		</tr>
+	</table>
+	<br><b>Preview</b>
+	<Table border="1"><tr><td><div id="DivPreview"></div></td></tr></table><br>
+	<input id=runbutton  class="button" type="button" value="Create Signature Files" name="createSig"  onClick="createFiles">
+</body>
